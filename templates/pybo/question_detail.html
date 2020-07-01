@@ -1,9 +1,20 @@
 {% extends 'base.html' %}
+{% load pybo_filter %}
 {% block content %}
 
 {% load static %}
 <link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
 <div class="container my-3">
+    <!-- user error -->
+    {% if messages %}
+        <div class="alert alert-danger my-3" role="alert">
+        {% for message in messages %}
+            <strong>{{ message.tags }}</strong>
+            <ul><li>{{ message.message }}</li></ul>
+        {% endfor %}
+        </div>
+    {% endif %}
+    <!-- question detail -->
     <h2 class="border-bottom py-2">{{ question.subject }}</h2>
     <div class="row my-3">
         <div class="col-1">
@@ -14,7 +25,7 @@
         <div class="col-11">
             <div class="card my-3">
                 <div class="card-body">
-                    <div class="card-text" style="white-space: pre-line;">{{ question.content }}</div>
+                    <div class="card-text" style="white-space: pre-line;">{{ question.content|mark }}</div>
                     <div class="d-flex justify-content-end">
                         {% if question.modify_date %}
                             <div class="badge badge-light p-2 text-left mx-3">
@@ -40,7 +51,8 @@
                 {% if question.comment_set.count %}
                     <div class="mt-3">
                         {% for comment in question.comment_set.all %}
-                            <div class="comment py-2 text-muted">
+                            <a name="comment_{{ comment.id }}"></a>
+                            <div class="comment pl-2 py-2 text-muted">
                                 <span style="white-space: pre-line;">{{ comment.content }}</span>
                                 <span>
                             - {{ comment.author }}, {{ comment.create_date }}
@@ -49,8 +61,8 @@
                                     {% endif %}
                         </span>
                                 {% if request.user == comment.author %}
-                                    <a href="{% url 'pybo:comment_modify_question comment.id' %}"
-                                       class="small">Modify</a>,
+                                    <a href="{% url 'pybo:comment_modify_question' comment.id %}"
+                                       class="small pl-2">Modify</a>,
                                     <a href="#" class="small delete"
                                        data-uri="{% url 'pybo:comment_delete_question' comment.id %}">Delete</a>
                                 {% endif %}
@@ -65,57 +77,70 @@
             </div>
         </div>
     </div>
-<!-- question answer part -->
+
     <h5 class="border-bottom my-3 py-2">There are {{ question.answer_set.count }} answers.</h5>
     {% for answer in question.answer_set.all %}
-        <div class="card my-3">
-            <div class="card-body">
-                <div class="card-text" style="white-space: pre-line;">{{ answer.content }}</div>
-                <div class="d-flex justify-content-end">
-                    {% if question.modify_date %}
-                        <div class="badge badge-light p-2 text-left mx-3">
-                            <div class="mb-2">modified at</div>
-                            <div>{{ question.modify_date }}</div>
-                        </div>
-                    {% endif %}
-                    <div class="badge badge-light p-2 text-left">
-                        <div class="mb-2">{{ question.author.username }}</div>
-                        <div>{{ answer.create_date }}</div>
-                    </div>
-                </div>
-                {% if request.user == answer.author %}
-                    <div class="my-3">
-                        <a href="{% url 'pybo:answer_modify' answer.id %}"
-                           class="btn btn-sm btn-outline-secondary">Modify</a>
-                        <a href="#" class="delete btn btn-sm btn-outline-secondary"
-                           data-uri="{% url 'pybo:answer_delete' answer.id %}">Delete</a>
-                    </div>
-                {% endif %}
-                <!-- Answer Comment -->
-                {% if answer.comment_set.count %}
-                    <div class="mt-3">
-                        {% for comment in answer.comment_set.all %}
-                            <div class="comment py-2 text-muted">
-                                <span style="white-space: pre-line;">{{ comment.content }}</span>
-                                <span>
-                                    - {{ comment.author }}, {{ comment.create_date }}
-                                    {% if comment.modify_date %}
-                                        (modify:{{ comment.modify_date }})
-                                    {% endif %}
-                                </span>
-                                {% if request.user == comment.author %}
-                                    <a href="{% url 'pybo:comment_modify_answer comment.id' %}"
-                                       class="small">Modify</a>,
-                                    <a href="#" class="small delete"
-                                       data-uri="{% url 'pybo:comment_delete_answer' comment.id %}">Delete</a>
-                                {% endif %}
+        <a name="answer_{{ answer.id }}"></a>
+        <div class="row my-3">
+        <!-- answer recommend part -->
+            <div class="col-1">
+                <div class="bg-light text-center p-3 border font-weight-bolder mb-1">{{ answer.voter.count }}</div>
+                <a href="#" data-uri="{% url 'pybo:vote_answer' answer.id %}"
+                   class="recommend btn btn-sm btn-secondary btn-block my-1">Recommend</a>
+            </div>
+        <!-- answer part -->
+            <div class="col-11">
+                <div class="card my-3">
+                    <div class="card-body">
+                        <div class="card-text">{{ answer.content|mark }}</div>
+                        <div class="d-flex justify-content-end">
+                            {% if question.modify_date %}
+                                <div class="badge badge-light p-2 text-left mx-3">
+                                    <div class="mb-2">modified at</div>
+                                    <div>{{ question.modify_date }}</div>
+                                </div>
+                            {% endif %}
+                            <div class="badge badge-light p-2 text-left">
+                                <div class="mb-2">{{ question.author.username }}</div>
+                                <div>{{ answer.create_date }}</div>
                             </div>
-                        {% endfor %}
+                        </div>
+                        {% if request.user == answer.author %}
+                            <div class="my-3">
+                                <a href="{% url 'pybo:answer_modify' answer.id %}"
+                                   class="btn btn-sm btn-outline-secondary">Modify</a>
+                                <a href="#" class="delete btn btn-sm btn-outline-secondary"
+                                   data-uri="{% url 'pybo:answer_delete' answer.id %}">Delete</a>
+                            </div>
+                        {% endif %}
+                        <!-- Answer Comment -->
+                        {% if answer.comment_set.count %}
+                            <div class="mt-3">
+                                {% for comment in answer.comment_set.all %}
+                                    <a name="comment_{{ comment.id }}"></a>
+                                    <div class="comment py-2 text-muted">
+                                        <span style="white-space: pre-line;">{{ comment.content }}</span>
+                                        <span>
+                                    - {{ comment.author }}, {{ comment.create_date }}
+                                            {% if comment.modify_date %}
+                                                (modify:{{ comment.modify_date }})
+                                            {% endif %}
+                                </span>
+                                        {% if request.user == comment.author %}
+                                            <a href="{% url 'pybo:comment_modify_answer' comment.id %}"
+                                               class="small pl-2">Modify</a>,
+                                            <a href="#" class="small delete"
+                                               data-uri="{% url 'pybo:comment_delete_answer' comment.id %}">Delete</a>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <a href="{% url 'pybo:comment_create_answer' answer.id %}"
+                               class="small ml-3"><small>Add Comment ..</small></a>
+                        </div>
                     </div>
-                {% endif %}
-                <div>
-                    <a href="{% url 'pybo:comment_create_answer' answer.id %}"
-                       class="small ml-3"><small>Add Comment ..</small></a>
                 </div>
             </div>
         </div>
