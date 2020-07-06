@@ -24,4 +24,6 @@ urlpatterns = [
     path('common/', include('common.urls')),
 ]
 
+handler400 = 'common.views.bad_request'
 handler404 = 'common.views.page_not_found'
+handler500 = 'common.views.server_error'

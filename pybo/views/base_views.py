@@ -6,6 +6,7 @@ from pybo.models import Question
 
 
 def index(request):
+    3/0
     # input parameter
     page = request.GET.get('page', '1')  # page
     kw = request.GET.get('kw', '')  # keyword

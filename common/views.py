@@ -18,6 +18,14 @@ def signup(request):
     return render(request, 'common/signup.html', {'form': form})
 
 
+def bad_request(request, exception):
+    return render(request, 'common/400.html', {})
+
+
 def page_not_found(request, exception):
     return render(request, 'common/404.html', {})
+
+
+def server_error(request):
+    return render(request, 'common/500.html', {})
 
