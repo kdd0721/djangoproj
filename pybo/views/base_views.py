@@ -1,12 +1,14 @@
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.shortcuts import render, get_object_or_404
+import logging
+logger = logging.getLogger('pybo')
 
 from pybo.models import Question
 
 
 def index(request):
-    3/0
+    logger.info("output to INFO level")
     # input parameter
     page = request.GET.get('page', '1')  # page
     kw = request.GET.get('kw', '')  # keyword
