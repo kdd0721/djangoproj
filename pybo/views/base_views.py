@@ -2,9 +2,9 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.shortcuts import render, get_object_or_404
 import logging
-logger = logging.getLogger('pybo')
+from pybo.models import Question, Answer
 
-from pybo.models import Question
+logger = logging.getLogger('pybo')
 
 
 def index(request):
@@ -40,5 +40,18 @@ def index(request):
 
 def detail(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
-    context = {'question': question}
+
+    page = request.GET.get('page', '1')  # page
+    so = request.GET.get('so', 'recent')  # sorting criteria
+
+    if so == 'recommend':
+        answer_list = Answer.objects.filter(question_id=question.id).annotate(num_voter=Count('voter')).order_by('-num_voter', '-create_date')
+    else:
+        answer_list = Answer.objects.filter(question_id=question.id).order_by('-create_date')
+
+    # paging handling
+    paginator = Paginator(answer_list, 5)  # 페이지당 10개씩 보여주기
+    page_obj = paginator.get_page(page)
+
+    context = {'question': question, 'answer_list': page_obj, 'so': so}
     return render(request, 'pybo/question_detail.html', context)
